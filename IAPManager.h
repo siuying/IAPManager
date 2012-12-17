@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>
+#import "RRVerificationController.h"
 
 typedef void(^PurchaseCompletionBlock)(SKPaymentTransaction *transaction);
 typedef void(^ProductsCompletionBlock)(NSArray *products);
@@ -24,7 +25,7 @@ typedef void(^PurchasedProductsChanged)(void);
 
 /// A simple toolkit for non-renewables (a.k.a "Premium Features") with In-App Purchase.
 /// The main goal is ease of use. Therefore, more complicated parts, like checking of receipts, are not provided.
-@interface IAPManager : NSObject
+@interface IAPManager : NSObject <RRVerificationControllerDelegate>
 
 + (IAPManager *)sharedIAPManager;
 

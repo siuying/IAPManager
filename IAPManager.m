@@ -157,14 +157,10 @@ NSURL *purchasesURL() {
         
         if(transaction.transactionState == SKPaymentTransactionStatePurchased ||
            transaction.transactionState == SKPaymentTransactionStateRestored) {
-            [self.purchasedItems addObject:transaction.payment.productIdentifier];
-            for(NSArray *t in self.purchasesChangedCallbacks) {
-                PurchasedProductsChanged callback = t[0];
-                callback();
+            NSError* error = nil;
+            if (![RRVerificationController verifyPurchase:transaction withDelegate:self error:&error]) {
+                if (err) err(error);
             }
-            self.purchasedItemsChanged = YES;
-            [queue finishTransaction:transaction];
-            if(completion) completion(transaction);
         }
         else if(transaction.transactionState == SKPaymentTransactionStateFailed) {
             if(err) err(transaction.error);
@@ -189,6 +185,54 @@ NSURL *purchasesURL() {
         if(t[1] == context) {
             [self.purchasesChangedCallbacks removeObjectAtIndex:i];
         }
+    }
+}
+
+#pragma makr - 
+
+- (void)verificationControllerDidVerifyPurchase:(SKPaymentTransaction *)transaction isValid:(BOOL)isValid {
+    PurchaseCompletionBlock completion = nil;
+    ErrorBlock err = nil;
+    for(int i = 0; i < c; ++i) {
+        NSArray *t = [self.payments objectAtIndex:i];
+        if([t[0] isEqual:transaction.payment.productIdentifier]) {
+            completion = t[1];
+            err = t[2];
+            break;
+        }
+    }
+
+    if (isValid) {
+        [self.purchasedItems addObject:transaction.payment.productIdentifier];
+        for(NSArray *t in self.purchasesChangedCallbacks) {
+            PurchasedProductsChanged callback = t[0];
+            callback();
+        }
+        self.purchasedItemsChanged = YES;
+        [queue finishTransaction:transaction];
+
+        if (completion) {
+            completion(transaction);
+        }
+    } else {
+        if (err) {
+            err([NSError errorWithDomain:@"IAPManager.Validation.Failed" code:0 userInfo:@{@"transaction": transaction}]);
+        }
+    }
+}
+
+- (void)verificationControllerDidFailToVerifyPurchase:(SKPaymentTransaction *)transaction error:(NSError *)error {
+    ErrorBlock err = nil;
+    for(int i = 0; i < c; ++i) {
+        NSArray *t = [self.payments objectAtIndex:i];
+        if([t[0] isEqual:transaction.payment.productIdentifier]) {
+            err = t[2];
+            break;
+        }
+    }
+
+    if (err) {
+        err(error);
     }
 }
 
