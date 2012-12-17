@@ -7,6 +7,7 @@
 //
 
 #import "IAPManager.h"
+#import "RRVerificationController.h"
 
 @interface IAPManager () <SKProductsRequestDelegate, SKPaymentTransactionObserver>
 @property (strong) NSMutableArray *purchasedItems;
@@ -47,6 +48,14 @@ NSURL *purchasesURL() {
         self.purchasesChangedCallbacks = [NSMutableArray array];
     }
     return self;
+}
+
+- (void) setItcContentProviderSharedSecret:(NSString*)secret {
+    [[RRVerificationController sharedInstance] setItcContentProviderSharedSecret:secret];
+}
+
+-(NSString*) itcContentProviderSharedSecret {
+    return [[RRVerificationController sharedInstance] itcContentProviderSharedSecret];
 }
 
 - (void)willResignActive:(NSNotification *)notification {
@@ -157,8 +166,10 @@ NSURL *purchasesURL() {
         
         if(transaction.transactionState == SKPaymentTransactionStatePurchased ||
            transaction.transactionState == SKPaymentTransactionStateRestored) {
+            [queue finishTransaction:transaction];
+
             NSError* error = nil;
-            if (![RRVerificationController verifyPurchase:transaction withDelegate:self error:&error]) {
+            if (![[RRVerificationController sharedInstance] verifyPurchase:transaction withDelegate:self error:&error]) {
                 if (err) err(error);
             }
         }
@@ -188,9 +199,10 @@ NSURL *purchasesURL() {
     }
 }
 
-#pragma makr - 
+#pragma mark - RRVerificationControllerDelegate
 
 - (void)verificationControllerDidVerifyPurchase:(SKPaymentTransaction *)transaction isValid:(BOOL)isValid {
+    NSUInteger c = [self.payments count];
     PurchaseCompletionBlock completion = nil;
     ErrorBlock err = nil;
     for(int i = 0; i < c; ++i) {
@@ -209,7 +221,6 @@ NSURL *purchasesURL() {
             callback();
         }
         self.purchasedItemsChanged = YES;
-        [queue finishTransaction:transaction];
 
         if (completion) {
             completion(transaction);
@@ -222,6 +233,7 @@ NSURL *purchasesURL() {
 }
 
 - (void)verificationControllerDidFailToVerifyPurchase:(SKPaymentTransaction *)transaction error:(NSError *)error {
+    NSUInteger c = [self.payments count];
     ErrorBlock err = nil;
     for(int i = 0; i < c; ++i) {
         NSArray *t = [self.payments objectAtIndex:i];
