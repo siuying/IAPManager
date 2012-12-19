@@ -50,14 +50,6 @@ NSURL *purchasesURL() {
     return self;
 }
 
-- (void) setItcContentProviderSharedSecret:(NSString*)secret {
-    [[RRVerificationController sharedInstance] setItcContentProviderSharedSecret:secret];
-}
-
--(NSString*) itcContentProviderSharedSecret {
-    return [[RRVerificationController sharedInstance] itcContentProviderSharedSecret];
-}
-
 - (void)willResignActive:(NSNotification *)notification {
     if(self.purchasedItemsChanged) {
         BOOL success = [self.purchasedItems writeToURL:purchasesURL() atomically:YES];
@@ -197,6 +189,15 @@ NSURL *purchasesURL() {
             [self.purchasesChangedCallbacks removeObjectAtIndex:i];
         }
     }
+}
+#pragma mark - Validation
+
+- (void) setItcContentProviderSharedSecret:(NSString*)secret {
+    [[RRVerificationController sharedInstance] setItcContentProviderSharedSecret:secret];
+}
+
+-(NSString*) itcContentProviderSharedSecret {
+    return [[RRVerificationController sharedInstance] itcContentProviderSharedSecret];
 }
 
 #pragma mark - RRVerificationControllerDelegate

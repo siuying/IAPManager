@@ -47,6 +47,12 @@ typedef void(^PurchasedProductsChanged)(void);
 
 - (BOOL)canPurchase;
 
+#pragma mark Validation
+
+- (void) setItcContentProviderSharedSecret:(NSString*)secret;
+
+-(NSString*) itcContentProviderSharedSecret;
+
 #pragma mark Observation
 
 // add a callback that should be called if a new product is purchased.
